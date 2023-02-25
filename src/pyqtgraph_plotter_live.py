@@ -8,30 +8,39 @@ close() function stops the audio stream and terminates the PyAudio instance when
 
 import pyaudio
 import numpy as np
-from pyqtgraph.Qt import QtGui, QtCore
+from PyQt6 import QtCore, QtWidgets
+from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
+import sys
 
 
-class LiveAudioPlot(object):
-    def __init__(self):
+class LiveAudioPlot(QtWidgets.QMainWindow):
+    def __init__(self, channels, *args, **kwargs):
+        super(LiveAudioPlot, self).__init__(*args, **kwargs)
         # Set up audio stream
         self.audio = pyaudio.PyAudio()
         self.chunk_size = 1024
         self.format = pyaudio.paFloat32
-        self.channels = 1
+        self.channels = channels
         self.rate = 44100
         self.stream = self.audio.open(format=self.format, channels=self.channels,
                                       rate=self.rate, input=True,
                                       frames_per_buffer=self.chunk_size)
 
         # Set up plot
-        self.app = QtGui.QApplication([])
-        self.win = pg.GraphicsWindow(title="Live Audio Plot")
+        self.win = pg.GraphicsLayoutWidget(title='Live Audio Plot')
         self.win.resize(800, 600)
         self.win.setWindowTitle('Live Audio Plot')
-        self.plot = self.win.addPlot(title='Audio Signal')
-        self.plot.setYRange(-1, 1)
-        self.curve = self.plot.plot(pen='y')
+        self.plots = []
+        self.curves = []	
+        for i in range(self.channels):
+            
+            self.plots.append(self.win.addPlot(title='Channel {}'.format(i)))
+
+            self.plots[i].setYRange(-1, 1)
+
+            self.curves.append(self.plots[i].plot(pen='y'))
+
         self.x = np.arange(0, 2 * self.chunk_size, 2)
         self.data = np.zeros(self.chunk_size)
 
@@ -51,10 +60,10 @@ class LiveAudioPlot(object):
 
         # Update plot
         time_array = np.arange(len(self.data)) / float(self.rate)
-        self.curve.setData(time_array[-self.plot_length * self.rate:], self.data[-self.plot_length * self.rate:])
+        for i in range(self.channels):
+            self.curves[i].setData(time_array[-self.plot_length * self.rate:], self.data[-self.plot_length * self.rate:])
+       # self.curve.setData(time_array[-self.plot_length * self.rate:], self.data[-self.plot_length * self.rate:])
 
-    def run(self):
-        self.app.exec_()
 
     def close(self):
         self.stream.stop_stream()
@@ -63,6 +72,8 @@ class LiveAudioPlot(object):
 
 
 if __name__ == '__main__':
-    lap = LiveAudioPlot()
-    lap.run()
-    lap.close()
+
+    app = QtWidgets.QApplication([])
+    lap = LiveAudioPlot(channels=3)
+    lap.show()
+    sys.exit(app.exec())
