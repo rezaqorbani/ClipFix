@@ -28,7 +28,7 @@ class LiveAudioPlot(QtWidgets.QMainWindow):
                                       frames_per_buffer=self.chunk_size)
 
         # Set up plot
-        self.win = pg.GraphicsLayoutWidget(title='Live Audio Plot')
+        self.win = pg.GraphicsLayoutWidget(show=True, title='Live Audio Plot')
         self.win.resize(800, 600)
         self.win.setWindowTitle('Live Audio Plot')
         self.plots = []
@@ -75,5 +75,4 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication([])
     lap = LiveAudioPlot(channels=3)
-    lap.show()
     sys.exit(app.exec())
