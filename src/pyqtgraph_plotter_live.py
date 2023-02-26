@@ -28,6 +28,7 @@ class LiveAudio():
         self.stream = self.audio.open(format=self.format, channels=self.channels,
                                       rate=self.rate, input=True,
                                       frames_per_buffer=self.chunk_size)
+
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
         self.data = np.zeros(self.chunk_size)
