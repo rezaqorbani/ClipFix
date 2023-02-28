@@ -60,8 +60,9 @@ class LiveAudio():
                                       frames_per_buffer=self.chunk_size)
 
     def stopRecording(self):
-        self.recording = False
-        self.stream.stop_stream()
+        if self.recording:
+            self.recording = False
+            self.stream.stop_stream()
  
     def closeSession(self):
         self.recording = False
