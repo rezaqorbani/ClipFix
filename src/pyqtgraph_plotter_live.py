@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.inputPlots[i].showGrid(x=True, y=True, alpha=0.5)
             self.curves.append(self.inputPlots[i].plot(pen=pg.mkPen('y', width=2)))
 
-        self.outputPlot = self.win.addPlot(row=1, col=0, title='Output')
+        self.outputPlot = self.win.addPlot(row=1, col=0, colspan=nchannels, title='Output')
         self.outputPlot.setLabels(left='Amplitude', bottom='Time (s)')
         self.outputPlot.getAxis('bottom').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
         self.outputPlot.getAxis('left').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
@@ -106,31 +106,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set up live audio
         self.liveAudio = LiveAudio(nchannels=self.nchannels, curves=self.curves)
 
-        if self.nchannels == 1:
-            self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.recordButton = QtWidgets.QPushButton('Record')
-            self.recordButton.clicked.connect(self.record)
-            self.recordButtonProxy.setWidget(self.recordButton)
-            self.win.addItem(self.recordButtonProxy, row=2, col=self.nchannels)
+        self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
+        self.recordButton = QtWidgets.QPushButton('Record')
+        self.recordButton.clicked.connect(self.record)
+        self.recordButtonProxy.setWidget(self.recordButton)
+        self.win.addItem(self.recordButtonProxy, row=2, col=self.nchannels-2)
 
-            self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.stopButton = QtWidgets.QPushButton('Stop')
-            self.stopButton.clicked.connect(self.stop)
-            self.stopButtonProxy.setWidget(self.stopButton)
-            self.win.addItem(self.stopButtonProxy, row=2, col=self.nchannels+1)
-
-        else:
-            self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.recordButton = QtWidgets.QPushButton('Record')
-            self.recordButton.clicked.connect(self.record)
-            self.recordButtonProxy.setWidget(self.recordButton)
-            self.win.addItem(self.recordButtonProxy, row=2, col=self.nchannels-2)
-
-            self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.stopButton = QtWidgets.QPushButton('Stop')
-            self.stopButton.clicked.connect(self.stop)
-            self.stopButtonProxy.setWidget(self.stopButton)
-            self.win.addItem(self.stopButtonProxy, row=2, col=self.nchannels-1)
+        self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
+        self.stopButton = QtWidgets.QPushButton('Stop')
+        self.stopButton.clicked.connect(self.stop)
+        self.stopButtonProxy.setWidget(self.stopButton)
+        self.win.addItem(self.stopButtonProxy, row=2, col=self.nchannels-1)
 
     def record(self):
         self.liveAudio.startRecording()
