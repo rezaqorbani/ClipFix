@@ -88,8 +88,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.win.setWindowTitle('Live Audio Plot')
         self.inputPlots = []
         self.curves = []
+        
         for i in range(self.nchannels):
-            self.inputPlots.append(self.win.addPlot(row=0, col=i, title='Channel {}'.format(i+1)))
+            self.inputPlots.append(self.win.addPlot(row=i, col=0, colspan=2, title='Channel {}'.format(i+1)))
             self.inputPlots[i].setYRange(-1, 1)
             self.inputPlots[i].setLabels(left='Amplitude', bottom='Time (s)')
             self.inputPlots[i].getAxis('bottom').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
@@ -97,40 +98,28 @@ class MainWindow(QtWidgets.QMainWindow):
             self.inputPlots[i].showGrid(x=True, y=True, alpha=0.5)
             self.curves.append(self.inputPlots[i].plot(pen=pg.mkPen('y', width=2)))
 
-        self.outputPlot = self.win.addPlot(row=1, col=0, title='Output')
+        self.outputPlot = self.win.addPlot(row=self.nchannels, col=0, colspan=2, title='Output')
+        self.outputPlot.setYRange(-1, 1)
         self.outputPlot.setLabels(left='Amplitude', bottom='Time (s)')
         self.outputPlot.getAxis('bottom').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
         self.outputPlot.getAxis('left').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
         self.outputPlot.showGrid(x=True, y=True, alpha=0.5)
+        self.curves.append(self.outputPlot.plot(pen=pg.mkPen('y', width=2)))
 
         # Set up live audio
         self.liveAudio = LiveAudio(nchannels=self.nchannels, curves=self.curves)
 
-        if self.nchannels == 1:
-            self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.recordButton = QtWidgets.QPushButton('Record')
-            self.recordButton.clicked.connect(self.record)
-            self.recordButtonProxy.setWidget(self.recordButton)
-            self.win.addItem(self.recordButtonProxy, row=2, col=self.nchannels)
+        self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
+        self.recordButton = QtWidgets.QPushButton('Record')
+        self.recordButton.clicked.connect(self.record)
+        self.recordButtonProxy.setWidget(self.recordButton)
+        self.win.addItem(self.recordButtonProxy, row=self.nchannels+1, col=0)
 
-            self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.stopButton = QtWidgets.QPushButton('Stop')
-            self.stopButton.clicked.connect(self.stop)
-            self.stopButtonProxy.setWidget(self.stopButton)
-            self.win.addItem(self.stopButtonProxy, row=2, col=self.nchannels+1)
-
-        else:
-            self.recordButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.recordButton = QtWidgets.QPushButton('Record')
-            self.recordButton.clicked.connect(self.record)
-            self.recordButtonProxy.setWidget(self.recordButton)
-            self.win.addItem(self.recordButtonProxy, row=2, col=self.nchannels-2)
-
-            self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
-            self.stopButton = QtWidgets.QPushButton('Stop')
-            self.stopButton.clicked.connect(self.stop)
-            self.stopButtonProxy.setWidget(self.stopButton)
-            self.win.addItem(self.stopButtonProxy, row=2, col=self.nchannels-1)
+        self.stopButtonProxy = QtWidgets.QGraphicsProxyWidget()
+        self.stopButton = QtWidgets.QPushButton('Stop')
+        self.stopButton.clicked.connect(self.stop)
+        self.stopButtonProxy.setWidget(self.stopButton)
+        self.win.addItem(self.stopButtonProxy, row=self.nchannels+1, col=1)
 
     def record(self):
         self.liveAudio.startRecording()
@@ -153,12 +142,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 event.ignore()
         else:
             # Perform cleanup here
-            print('Cleaning up before exit...')
             event.accept()
 
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
-    win = MainWindow(nchannels=3)
+    win = MainWindow(nchannels=2)
     win.show()
     sys.exit(app.exec())
