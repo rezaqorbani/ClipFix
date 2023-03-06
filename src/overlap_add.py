@@ -5,8 +5,8 @@ from sequence_generation2 import gen
 import matplotlib.pyplot as plt
 
 # Get signals at different gain levels using the script
-signals=gen(plot_flag = False)
-two_channel_signal = signals[:,0:5:4]
+#signals=gen(plot_flag = False)
+#two_channel_signal = signals[:,0:5:4]
 
 def mix(signals):
     """_summary_
@@ -55,7 +55,7 @@ def mix(signals):
             # Calculate the energy of each channel in each chunk
             energies1 = np.sqrt(np.mean(np.square(chunk1), axis=0))
             energies2 = np.sqrt(np.mean(np.square(chunk2), axis=0))
-            print(energies1,energies2)
+            #print(energies1,energies2)
             
 
             # Select the chunk with the higher energy for each channel
@@ -80,12 +80,7 @@ def mix(signals):
         # Update the overlap-add buffers
         overlap_add_buffer = frame_to_keep[-frame_hop:]
 
-    plt.figure()
-    plt.plot(output)
-    plt.show()
-    
     return output
-
 
         
 def detect_clipping(signal_chunk, bit_depth):
@@ -130,6 +125,6 @@ def quantization_noise(signal_chunk):
 
 #print(is_clipped(signals[:,7],16))
 #detect_clipping(signals[:,7],16)
-mix(two_channel_signal)
+
         
 

@@ -1,7 +1,7 @@
 """
 This code creates a PyQtGraph window with a single plot that shows the live audio signal from the
 microphone. The update() function is called every time the timer fires, which reads a chunk of audio
-data from the microphone and updates the plot with the new data. The run() function starts the
+input_data from the microphone and updates the plot with the new input_data. The run() function starts the
 PyQtGraph event loop, which allows the window to stay open and update in real time. Finally, the
 close() function stops the audio stream and terminates the PyAudio instance when the window is closed.
 """
@@ -13,6 +13,7 @@ from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtGui import QFont
 import pyqtgraph as pg
 import sys
+from overlap_add import mix
 
 
 class LiveAudio():
@@ -31,7 +32,8 @@ class LiveAudio():
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
-        self.data = np.zeros(self.chunk_size)
+        self.input_data = np.zeros(self.chunk_size)
+        self.output_data = np.zeros(self.chunk_size)
 
         # Set up plot length
         self.plot_length = 5  # set the plot length to 5 seconds
@@ -42,18 +44,26 @@ class LiveAudio():
         self.timer.start(0)
 
     def update(self):
-        # Get audio data
+        # Get audio input_data
         if self.recording:
             raw_data = self.stream.read(self.chunk_size)
-            data = np.frombuffer(raw_data, dtype=np.float32)
-            self.data = np.concatenate((self.data, data))
+            input_data = np.frombuffer(raw_data, dtype=np.float32)
+            self.input_data = np.concatenate((self.input_data, input_data))
 
             # Update plot
-            time_array = np.arange(len(self.data)) / float(self.rate)
+            time_array = np.arange(len(self.input_data)) / float(self.rate)
 
             for i in range(self.nchannels):
-                self.curves[i].setData(time_array[-self.plot_length * self.rate:],
-                                       self.data[-self.plot_length * self.rate:])
+                self.curves["input"][i].setData(time_array[-self.plot_length * self.rate:],
+                                       self.input_data[-self.plot_length * self.rate:])
+
+            if self.nchannels != 1:
+                self.output_data = mix(self.input_data)
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:], 
+                                                self.output_data[-self.plot_length * self.rate:])
+            else:
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:], 
+                                                self.input_data[-self.plot_length * self.rate:])
 
     def startRecording(self):
         self.recording = True
@@ -87,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.win.resize(800, 600)
         self.win.setWindowTitle('Live Audio Plot')
         self.inputPlots = []
-        self.curves = []
+        self.curves = {"input": [], "output": []}
         
         for i in range(self.nchannels):
             self.inputPlots.append(self.win.addPlot(row=i, col=0, colspan=2, title='Channel {}'.format(i+1)))
@@ -96,7 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.inputPlots[i].getAxis('bottom').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
             self.inputPlots[i].getAxis('left').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
             self.inputPlots[i].showGrid(x=True, y=True, alpha=0.5)
-            self.curves.append(self.inputPlots[i].plot(pen=pg.mkPen('y', width=2)))
+            self.curves["input"].append(self.inputPlots[i].plot(pen=pg.mkPen('y', width=2)))
 
         self.outputPlot = self.win.addPlot(row=self.nchannels, col=0, colspan=2, title='Output')
         self.outputPlot.setYRange(-1, 1)
@@ -104,7 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.outputPlot.getAxis('bottom').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
         self.outputPlot.getAxis('left').setStyle(tickFont=QFont('Arial', 10), autoExpandTextSpace=True)
         self.outputPlot.showGrid(x=True, y=True, alpha=0.5)
-        self.curves.append(self.outputPlot.plot(pen=pg.mkPen('y', width=2)))
+        self.curves["output"].append(self.outputPlot.plot(pen=pg.mkPen('y', width=2)))
 
         # Set up live audio
         self.liveAudio = LiveAudio(nchannels=self.nchannels, curves=self.curves)
@@ -134,8 +144,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                          QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
-                # Perform cleanup here
-                print('Exiting...')
                 self.liveAudio.closeSession()
                 event.accept()
             else:
@@ -144,9 +152,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # Perform cleanup here
             event.accept()
 
-
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
-    win = MainWindow(nchannels=2)
+    win = MainWindow(nchannels=1)
     win.show()
     sys.exit(app.exec())
