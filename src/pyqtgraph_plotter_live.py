@@ -29,10 +29,11 @@ class LiveAudio():
         self.nchannels = nchannels
         self.rate = 44100
         self.stream: pyaudio.Stream = None
+        self.input_device_index = 1
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
-        self.input_data = np.zeros(self.chunk_size)
+        self.input_data = np.zeros((self.chunk_size, self.nchannels))
         self.output_data = np.zeros(self.chunk_size)
 
         # Set up plot length
@@ -47,18 +48,25 @@ class LiveAudio():
         # Get audio input_data
         if self.recording:
             raw_data = self.stream.read(self.chunk_size)
-            input_data = np.frombuffer(raw_data, dtype=np.float32)
-            self.input_data = np.concatenate((self.input_data, input_data))
+            numpy_data = np.frombuffer(raw_data, dtype=np.float32)
+            inputs = np.zeros((self.chunk_size, self.nchannels))
 
+            # seperate the channels
+            for i in range(self.nchannels):
+                inputs[:, i] = numpy_data[i::self.nchannels]
+            
+            self.input_data = np.concatenate((self.input_data, inputs))
+            
             # Update plot
             time_array = np.arange(len(self.input_data)) / float(self.rate)
 
             for i in range(self.nchannels):
                 self.curves["input"][i].setData(time_array[-self.plot_length * self.rate:],
-                                       self.input_data[-self.plot_length * self.rate:])
+                                       self.input_data[-self.plot_length * self.rate:, i])
 
             if self.nchannels != 1:
                 self.output_data = mix(self.input_data)
+                #self.output_data = self.input_data[:, 0]
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
@@ -69,7 +77,8 @@ class LiveAudio():
         self.recording = True
         self.stream = self.audio.open(format=self.format, channels=self.nchannels,
                                       rate=self.rate, input=True,
-                                      frames_per_buffer=self.chunk_size)
+                                      frames_per_buffer=self.chunk_size,
+                                      input_device_index=self.input_device_index)
 
     def stopRecording(self):
         self.recording = False
@@ -154,6 +163,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
-    win = MainWindow(nchannels=1)
+    win = MainWindow(nchannels=2)
     win.show()
     sys.exit(app.exec())

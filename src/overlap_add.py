@@ -20,7 +20,7 @@ def mix(signals):
     
 
     # Define sampling rate
-    sr = 16000
+    sr = 44100
     bit_depth= 16
 
     
