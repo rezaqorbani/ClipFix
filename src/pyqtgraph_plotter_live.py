@@ -14,6 +14,7 @@ from PyQt6.QtGui import QFont
 import pyqtgraph as pg
 import sys
 from overlap_add import mix
+from save_audio import save_audio
 
 
 class LiveAudio():
@@ -89,6 +90,15 @@ class LiveAudio():
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
+        
+        ## Save audios
+        n_bits = 16
+        # Save input audio
+        for i in range(self.nchannels):
+            save_audio(f"channel_{i+1}.wav", self.input_data[:,i], self.rate, n_bits)
+        # Save output audio
+        save_audio('output_audio.wav', self.output_data, self.rate, n_bits)
+        
 
     def isReocrding(self):
         return self.recording
@@ -158,6 +168,8 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 event.ignore()
         else:
+            # Close session
+            self.liveAudio.closeSession()
             # Perform cleanup here
             event.accept()
 
