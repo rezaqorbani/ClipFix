@@ -71,7 +71,7 @@ class LiveAudio():
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
-                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:., ], 
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.input_data[-self.plot_length * self.rate:, 0])
 
     def startRecording(self):
