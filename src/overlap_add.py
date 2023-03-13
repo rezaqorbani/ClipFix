@@ -20,7 +20,7 @@ def mix(signals):
     
 
     # Define sampling rate
-    sr = 44100
+    sr = 22050
     bit_depth= 16
 
     
@@ -114,7 +114,7 @@ def detect_clipping(signal_chunk, bit_depth):
 
 def is_clipped(signal_chunk, bit_depth):
     # Define clipping threshold value based on bit depth
-    threshold = 2 ** (bit_depth - 1) - 1
+    threshold = 0.90
     # Check if any value in the signal chunk exceeds the threshold
     indices=np.argwhere(np.abs(signal_chunk.astype(np.int32)) >= threshold)
     
@@ -123,8 +123,6 @@ def is_clipped(signal_chunk, bit_depth):
 def quantization_noise(signal_chunk):
     return None
 
-#print(is_clipped(signals[:,7],16))
-#detect_clipping(signals[:,7],16)
 
         
 

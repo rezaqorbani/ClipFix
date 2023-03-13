@@ -25,10 +25,10 @@ class LiveAudio():
 
         # Set up audio stream
         self.audio = pyaudio.PyAudio()
-        self.chunk_size = 1024
         self.format = pyaudio.paFloat32
         self.nchannels = nchannels
-        self.rate = 16000
+        self.rate = 22050
+        self.chunk_size = self.rate // 2
         self.stream: pyaudio.Stream = None
         self.input_device_index = 1
         self.record_length = 15
