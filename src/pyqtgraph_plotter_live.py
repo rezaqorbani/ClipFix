@@ -28,14 +28,17 @@ class LiveAudio():
         self.chunk_size = 1024
         self.format = pyaudio.paFloat32
         self.nchannels = nchannels
-        self.rate = 44100
+        self.rate = 8000
         self.stream: pyaudio.Stream = None
         self.input_device_index = 1
+        self.record_length = 10
+        self.n_bits = 16
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
         self.input_data = np.zeros((1, self.nchannels))
-        self.output_data = np.zeros(1)
+        self.output_data = np.zeros((self.rate * self.record_length, self.nchannels))
+        self.temp_inputs = np.zeros((self.chunk_size, self.nchannels))
 
         # Set up plot length
         self.plot_length = 1  # set the plot length to 1 second
@@ -50,13 +53,13 @@ class LiveAudio():
         if self.recording:
             raw_data = self.stream.read(self.chunk_size)
             numpy_data = np.frombuffer(raw_data, dtype=np.float32)
-            inputs = np.zeros((self.chunk_size, self.nchannels))
+            
 
             # seperate the channels
             for i in range(self.nchannels):
-                inputs[:, i] = numpy_data[i::self.nchannels]
+                self.temp_inputs[:, i] = numpy_data[i::self.nchannels]
             
-            self.input_data = np.concatenate((self.input_data, inputs))
+            self.input_data = np.concatenate((self.input_data, self.temp_inputs))
             
             # Update plot
             time_array = np.arange(len(self.input_data)) / float(self.rate)
@@ -71,33 +74,32 @@ class LiveAudio():
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
-                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:., ], 
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.input_data[-self.plot_length * self.rate:, 0])
 
     def startRecording(self):
-        self.recording = True
-        self.stream = self.audio.open(format=self.format, channels=self.nchannels,
-                                      rate=self.rate, input=True,
-                                      frames_per_buffer=self.chunk_size,
-                                      input_device_index=self.input_device_index)
+        if not self.recording:
+            self.recording = True
+            self.stream = self.audio.open(format=self.format, channels=self.nchannels,
+                                        rate=self.rate, input=True,
+                                        frames_per_buffer=self.chunk_size,
+                                        input_device_index=self.input_device_index)
 
     def stopRecording(self):
-        self.recording = False
-        self.stream.stop_stream()
+        if self.recording:
+            self.recording = False
+            self.stream.stop_stream()
+            # Save input audio
+            for i in range(self.nchannels):
+                save_audio(f"channel_{i+1}.wav", self.input_data[:,i], self.rate, self.n_bits)
+            # Save output audio
+            save_audio('output_audio.wav', self.output_data, self.rate, self.n_bits)
 
     def closeSession(self):
         self.recording = False
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
-        
-        ## Save audios
-        n_bits = 16
-        # Save input audio
-        for i in range(self.nchannels):
-            save_audio(f"channel_{i+1}.wav", self.input_data[:,i], self.rate, n_bits)
-        # Save output audio
-        save_audio('output_audio.wav', self.output_data, self.rate, n_bits)
         
 
     def isReocrding(self):
