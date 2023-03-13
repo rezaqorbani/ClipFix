@@ -36,8 +36,8 @@ class LiveAudio():
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
-        self.input_data = np.zeros((self.rate * self.record_length, self.nchannels))
-        self.output_data = np.zeros((self.rate * self.record_length, self.nchannels))
+        self.input_data = np.zeros((1, self.nchannels))
+        self.output_data = np.zeros((1, self.nchannels))
         self.temp_inputs = np.zeros((self.chunk_size, self.nchannels))
 
         # Set up plot length
