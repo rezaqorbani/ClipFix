@@ -3,12 +3,13 @@ import numpy as np
 from scipy import signal
 from sequence_generation2 import gen
 import matplotlib.pyplot as plt
-
+from scipy.io import wavfile
+from save_audio import save_audio
 # Get signals at different gain levels using the script
 #signals=gen(plot_flag = False)
 #two_channel_signal = signals[:,0:5:4]
 
-def mix(signals):
+def mix(signals, sampling_rate=22050, bit_depth=16, frame_len=0.03, frame_hop=0.015):
     """_summary_
 
     Args:
@@ -20,13 +21,13 @@ def mix(signals):
     
 
     # Define sampling rate
-    sr = 22050
+    sampling_rate = 22050
     bit_depth= 16
 
     
     # Define the window size and overlap
-    frame_len = int(0.03 * sr)
-    frame_hop = int(0.015 * sr)
+    frame_len = int(0.03 * sampling_rate)
+    frame_hop = int(0.015 * sampling_rate)
 
     # Initialize the overlap-add buffer
     overlap_add_buffer = np.zeros((frame_hop))
@@ -75,7 +76,7 @@ def mix(signals):
         frame_to_keep[:frame_hop] += overlap_add_buffer
         
         # Reconstruct the audio signal by summing the mixed chunks
-        output[i:i+frame_len] += frame_to_keep
+        output[i:i+frame_len] = frame_to_keep
 
         # Update the overlap-add buffers
         overlap_add_buffer = frame_to_keep[-frame_hop:]
@@ -125,4 +126,11 @@ def quantization_noise(signal_chunk):
 
 
         
+if __name__ == "__main__":
+    # Get signals at different gain levels using the script
+    sample_rate1, signals1 = wavfile.read('audio_files/one_channel_clipping/channel_1.wav')
+    sample_rate2, signals2 = wavfile.read('audio_files/one_channel_clipping/channel_2.wav')
+    signals=np.array([signals1,signals2]).T
+    output = mix(signals, 22050)
+    save_audio('mixed.wav',output, 22050, 16)
 
