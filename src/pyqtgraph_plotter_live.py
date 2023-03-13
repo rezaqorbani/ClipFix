@@ -28,15 +28,15 @@ class LiveAudio():
         self.chunk_size = 1024
         self.format = pyaudio.paFloat32
         self.nchannels = nchannels
-        self.rate = 8000
+        self.rate = 16000
         self.stream: pyaudio.Stream = None
         self.input_device_index = 1
-        self.record_length = 10
+        self.record_length = 15
         self.n_bits = 16
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
-        self.input_data = np.zeros((1, self.nchannels))
+        self.input_data = np.zeros((self.rate * self.record_length, self.nchannels))
         self.output_data = np.zeros((self.rate * self.record_length, self.nchannels))
         self.temp_inputs = np.zeros((self.chunk_size, self.nchannels))
 
