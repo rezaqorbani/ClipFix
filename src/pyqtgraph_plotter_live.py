@@ -34,11 +34,11 @@ class LiveAudio():
 
         # Set up x and y arrays
         self.x = np.arange(0, 2 * self.chunk_size, 2)
-        self.input_data = np.zeros((self.chunk_size, self.nchannels))
-        self.output_data = np.zeros(self.chunk_size)
+        self.input_data = np.zeros((1, self.nchannels))
+        self.output_data = np.zeros(1)
 
         # Set up plot length
-        self.plot_length = 5  # set the plot length to 5 seconds
+        self.plot_length = 1  # set the plot length to 1 second
 
         # Set up timer
         self.timer = QtCore.QTimer()
@@ -62,17 +62,17 @@ class LiveAudio():
             time_array = np.arange(len(self.input_data)) / float(self.rate)
 
             for i in range(self.nchannels):
-                self.curves["input"][i].setData(time_array[-self.plot_length * self.rate:],
+                self.curves["input"][i].setData(time_array[-self.plot_length * self.rate:, ],
                                        self.input_data[-self.plot_length * self.rate:, i])
 
             if self.nchannels != 1:
                 self.output_data = mix(self.input_data)
                 #self.output_data = self.input_data[:, 0]
-                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:], 
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
-                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:], 
-                                                self.input_data[-self.plot_length * self.rate:])
+                self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:., ], 
+                                                self.input_data[-self.plot_length * self.rate:, 0])
 
     def startRecording(self):
         self.recording = True
