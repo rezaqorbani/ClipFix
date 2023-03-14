@@ -69,7 +69,7 @@ class LiveAudio():
                                        self.input_data[-self.plot_length * self.rate:, i])
 
             if self.nchannels != 1:
-                self.output_data = mix(self.input_data)
+                self.output_data = mix(self.input_data, self.rate)
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
