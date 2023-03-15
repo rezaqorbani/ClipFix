@@ -4,7 +4,7 @@ from scipy import signal
 import noisereduce as nr
 
 
-def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1, reduce_noise=False):
+def mix(signals, sampling_rate, cf=0.7, low_channel=1, reduce_noise=False):
     """_summary_
 
     Args:
@@ -17,8 +17,8 @@ def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1, reduce
 
     
     # Define the window size and overlap
-    frame_len = int(0.03 * sampling_rate)
-    frame_hop = int(0.015 * sampling_rate)
+    frame_len = int(0.05 * sampling_rate)
+    frame_hop = int(0.025 * sampling_rate)
     
     
     # Process the audio signals in chunks

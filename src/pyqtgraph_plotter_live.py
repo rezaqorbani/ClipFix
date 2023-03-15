@@ -28,7 +28,7 @@ class LiveAudio():
         self.audio = pyaudio.PyAudio()
         self.format = pyaudio.paFloat32
         self.nchannels = nchannels
-        self.rate = 22050
+        self.rate = 48000
         self.chunk_size = self.rate // 2
         self.stream: pyaudio.Stream = None
         self.input_device_index = 1
@@ -71,8 +71,6 @@ class LiveAudio():
 
             if self.nchannels != 1:
                 self.output_data = mix(self.input_data, self.rate)
-                
-                #write('test_with_correct_save_test2.wav', sample_rate1, scaled)
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
