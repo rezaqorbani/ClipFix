@@ -4,8 +4,7 @@ from scipy import signal
 import noisereduce as nr
 
 
-def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1):
-
+def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1, reduce_noise=False):
     """_summary_
 
     Args:
@@ -23,7 +22,6 @@ def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1):
     
     
     # Process the audio signals in chunks
-    
     # Calculate the maximum absolute value of each column
     normalized_signals=signals/np.amax(np.abs(signals), axis=0)
     
@@ -63,26 +61,18 @@ def mix(signals, sampling_rate=44100, bit_depth=16, cf=0.7,low_channel=1):
         frame_to_keep = (frame_to_keep*window)     
         
         # Reconstruct the audio signal by summing the mixed chunks
-        output[i:i+frame_len] = frame_to_keep
-
+        output[i:i+frame_len] += frame_to_keep
         
-    reduced_noise = nr.reduce_noise(y=output, y_noise=signals[:,low_channel], sr=sampling_rate, prop_decrease=0.9)
-    return reduced_noise
+    # Reduce noise if needed
+    if reduce_noise:
+        output = nr.reduce_noise(y=output, y_noise=signals[:,low_channel], sr=sampling_rate, prop_decrease=0.9)
+    return output
 
 def is_clipped(signal_chunk):
     # Define clipping threshold value based on bit depth
     threshold = 0.98
-
     # Check if any value in the signal chunk exceeds the threshold
     indices=np.argwhere(np.abs(signal_chunk.astype(np.int32)) >= threshold)
-    
     return len(indices)!=0
         
-if __name__ == "__main__":
-    # Get signals at different gain levels using the script
-    sample_rate1, signals1 = wavfile.read('audio_files/one_channel_clipping/channel_1.wav')
-    sample_rate2, signals2 = wavfile.read('audio_files/one_channel_clipping/channel_2.wav')
-    signals=np.array([signals1,signals2]).T
-    output = mix(signals, 22050)
-    save_audio('mixed.wav',output, 22050, 16)
 

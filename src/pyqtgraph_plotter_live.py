@@ -17,6 +17,7 @@ from overlap_add import mix
 from save_audio import save_audio
 
 
+
 class LiveAudio():
     def __init__(self, nchannels, curves):
 
@@ -70,6 +71,8 @@ class LiveAudio():
 
             if self.nchannels != 1:
                 self.output_data = mix(self.input_data, self.rate)
+                
+                #write('test_with_correct_save_test2.wav', sample_rate1, scaled)
                 self.curves["output"][0].setData(time_array[-self.plot_length * self.rate:, ], 
                                                 self.output_data[-self.plot_length * self.rate:])
             else:
@@ -92,8 +95,9 @@ class LiveAudio():
             for i in range(self.nchannels):
                 save_audio(f"channel_{i+1}.wav", self.input_data[:,i], self.rate, self.n_bits)
             # Save output audio
+            self.output_data=np.int16(self.output_data / np.max(np.abs(self.output_data))*32767)
             save_audio('output_audio.wav', self.output_data, self.rate, self.n_bits)
-
+            
     def closeSession(self):
         self.recording = False
         self.stream.stop_stream()
